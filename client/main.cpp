@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <stdio.h>
+#include "protocol.pb.h"
+#include <string>
 
 int main()
 {
@@ -21,12 +23,34 @@ int main()
         perror("connection error\n");
         exit(1);
     }
-    printf("connection success");
-    char msg[] = "asd";
-    send(fd,msg,strlen(msg),0);
+    printf("connection success\n");
+    arknoah::Request request;
+    request.mutable_proto_head()->set_cmd(arknoah::Request_head::INIT);
+    request.mutable_proto_head()->set_passwd("464379852luo***");
+    request.mutable_proto_head()->set_uid(123);
+    std::string sendbuf;
+    request.SerializeToString(&sendbuf);
+    char* byteArry = new char[sendbuf.length()+4];
+    *(uint32_t*)byteArry = (uint32_t)sendbuf.length();
+    memcpy(byteArry+4,sendbuf.data(),sendbuf.length());
+    printf("serialize size:%d\n",sendbuf.length());
+    write(fd,byteArry,sendbuf.length()+4);
+    printf("send complete\n");
 
-    char buf[200];
-    recv(fd,buf,200,0);
+    printf("test\n");
+    uint32_t msgLen = *(uint32_t*)byteArry;
+    std::string s_data(byteArry+4,byteArry+5+msgLen);
+    arknoah::Request testPkg;
+    if(!testPkg.ParseFromArray(byteArry+4,msgLen))
+    {
+        printf("parse error\n");
+    }
+    else
+    {
+        printf("parse success\n");
+    }
+
+
 
     return 0;
 

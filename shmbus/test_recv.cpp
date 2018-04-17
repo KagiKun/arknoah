@@ -18,11 +18,12 @@ int main()
     ev.data.fd = queuefd;
     ev.events = EPOLLIN;
     epoll_ctl(epollfd,EPOLL_CTL_ADD,queuefd,&ev);
-    struct epoll_event evs[100];
-    epoll_wait(epollfd,evs,100,-1);
-    char recvBuf[100];
-    size_t ret = abus.recv(CONNECT_ID,recvBuf);
-    printf("recv size %d\n%s\n",ret,recvBuf);
-
+    while(1)
+    {
+        struct epoll_event evs[100];
+        epoll_wait(epollfd,evs,100,-1);
+        char recvBuf[100];
+        size_t ret = abus.recv(CONNECT_ID,recvBuf);
+        printf("recv size %ud\n%s\n",ret,recvBuf);
+    }
 }
-

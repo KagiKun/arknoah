@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package arknoah;
+
+message Request{
+    message head{
+       uint32 uid = 1;
+       string passwd = 2;
+       enum PackageType{
+            SIGN_UP = 0;
+            SIGN_IN = 1;
+            INIT = 3;
+       }
+       PackageType cmd = 3;
+    }
+
+    head proto_head = 1;
+
+}

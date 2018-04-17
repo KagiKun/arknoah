@@ -17,7 +17,6 @@ ShmQueue::ShmQueue()
 
 ShmQueue::~ShmQueue()
 {
-    shmctl(shmid,IPC_RMID,NULL);
     unlink(pathName);
 }
 
@@ -32,12 +31,12 @@ ssize_t ShmQueue::init(key_t key)
     }
 
     void* addr = shmat(shmid,NULL,0);
-    queueAddr = (void*)((char*)addr+sizeof(QueueHead));
     if(addr<0)
     {
         log_error("shmat error",__FILE__,__LINE__);
         return -1;
     }
+    queueAddr = (void*)((char*)addr+sizeof(QueueHead));
     head = static_cast<QueueHead*>(addr);
 
     memset(pathName,0,NAME_MAX_LENGTH);
@@ -45,7 +44,7 @@ ssize_t ShmQueue::init(key_t key)
     if(access(pathName,F_OK)<0)
         if(mkfifo(pathName,0666)<0)
         {
-            log_error("mkfifo error"); 
+            log_error("mkfifo error");
             return -1;
         }
     fifofd = open(pathName,0666);
@@ -84,7 +83,7 @@ ssize_t ShmQueue::send(void* data,size_t send_size)
     return send_size;
 }
 
-ssize_t ShmQueue::recv(void* dst)
+ssize_t ShmQueue::recv(void* dst,size_t recv_size)
 {
     size_t front = head->front;
     size_t rear = head->rear;
@@ -92,8 +91,14 @@ ssize_t ShmQueue::recv(void* dst)
     void* addr = queueAddr;
 
     size_t msg_size = 0;
+    size_t diff_size = 0;
     read(fifofd,&msg_size,sizeof(size_t));
-
+    if(msg_size>recv_size)     //如果实际发过来的包比接收缓存还要大，那么只接收预订缓存大小，并认定此包发生错误，将该包的后续舍去
+    {
+        log_error("The recv buffer of shmqueue is too small\n");
+        diff_size = msg_size - recv_size;
+        msg_size = recv_size;
+    }
     if(front==rear)
         return QUEUE_IS_EMPTY;
     if(front+msg_size<=size)
@@ -108,6 +113,14 @@ ssize_t ShmQueue::recv(void* dst)
         memcpy((char*)dst+size-front,addr,msg_size-front);
         head->front = msg_size - size + front;
     }
+    if(diff_size>0)  //如果出错则进行调整，舍去该包剩下的数据
+    {
+        if(front+diff_size<=size)
+            head->front += msg_size;
+        else
+            head->front = diff_size - size + front;
+    }
+
     return msg_size;
 }
 
@@ -128,12 +141,18 @@ ShmBus::ShmBus(size_t localID):localID(localID)
 
 ShmBus::~ShmBus()
 {
+/*
+    for(auto pair : keyMap)
+    {
+        delete pair.second;
+    }
+*/
 }
 
 size_t ShmBus::send(size_t dstID,void* data,size_t size)
 {
     key_t key = exchange(localID,dstID);
-    ShmQueue* pShmQueue = getQueue(key);    
+    ShmQueue* pShmQueue = getQueue(key);
     if(pShmQueue==NULL)
     {
         log_error("get shm error while sending,srcID = ",__FILE__,__LINE__,dstID);
@@ -142,16 +161,16 @@ size_t ShmBus::send(size_t dstID,void* data,size_t size)
     return pShmQueue->send(data,size);
 }
 
-size_t ShmBus::recv(size_t srcID,void* buf)
+size_t ShmBus::recv(size_t srcID,void* buf,size_t size)
 {
     key_t key = exchange(srcID,localID);
-    ShmQueue* pShmQueue = getQueue(key);    
+    ShmQueue* pShmQueue = getQueue(key);
     if(pShmQueue==NULL)
     {
         log_error("get shm error while recving,srcID = ",__FILE__,__LINE__,srcID);
         return 0;
     }
-    return pShmQueue->recv(buf);
+    return pShmQueue->recv(buf,size);
 }
 
 key_t ShmBus::exchange(size_t srcID,size_t dstID)
@@ -168,14 +187,13 @@ ShmQueue* ShmBus::getQueue(key_t key)
         pShmQueue = search->second;
     else
     {
-        pShmQueue = new ShmQueue;
+        pShmQueue = new ShmQueue;  //直至程序结束才被释放
         if(pShmQueue->init(key)<0)
         {
             log_error("shmQueue init error",__FILE__,__LINE__);
             return NULL;
         }
         keyMap.emplace(make_pair(key,pShmQueue));
-        printf("new shmQueue success\n");
     }
 
     return pShmQueue;

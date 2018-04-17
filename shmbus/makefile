@@ -8,8 +8,8 @@ recv:test_recv.cpp shmbus.cpp
 	g++ test_recv.cpp shmbus.cpp -o recv -I./ -I../include -g -std=c++11
 
 
-busd:busd.cpp 
-	g++ busd.cpp -I../include -I./ -o bus 
+busd:bus.cpp 
+	g++ bus.cpp -I../include -I./ -o bus -std=c++11
 
 clear:
 	rm send recv bus

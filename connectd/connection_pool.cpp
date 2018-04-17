@@ -1,7 +1,12 @@
-#include "connection_pool.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include "connection_pool.h"
+#include "config.h"
+
 
 ConnectionNode::ConnectionNode():m_connfd(0),m_uin(0),m_msgLen(0),m_recvedLen(0)
 {
@@ -28,13 +33,13 @@ void ConnectionNode::Recycle()
 
 ConnectionPool::ConnectionPool()
 {
-    m_nodePool = new ConnectionNode[NODE_NUM];
+    m_nodePool = new ConnectionNode[NUM_OF_NODE];
     if(m_nodePool==NULL)
     {
         perror("creat pool failed");
         exit(1);
     }
-    for(int i=0;i<NODE_NUM;++i)
+    for(int i=0;i<NUM_OF_NODE;++i)
         m_idleNode.push_back(m_nodePool+i);
 }
 

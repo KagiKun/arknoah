@@ -54,7 +54,7 @@ public:
     ShmBus(size_t localID);
     ~ShmBus();
     size_t send(size_t dstID,void* data,size_t size);
-    size_t recv(size_t srcID,void* buf);
+    size_t recv(size_t srcID,void* buf,size_t size);
     int getListenFd(size_t srcID);
 
 private:
@@ -62,8 +62,7 @@ private:
     map<key_t,ShmQueue*> keyMap;
     key_t exchange(size_t srcID,size_t dstID);
     ShmQueue* getQueue(key_t key);
-    
+
 };
 
 #endif
-

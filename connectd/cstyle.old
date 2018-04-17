@@ -8,12 +8,14 @@
 #include "config.h"
 #include "ev.h"
 #include "connection_pool.h"
+#include "shmbus.h"
 #include <errno.h>
 
 #define Debug
 
 ev_io listen_watcher;
 ev_io connection_watcher[NODE_NUM];
+struct ev_loop * loop;
 
 
 struct ConnectionNode connection_pool[NODE_NUM]; 
@@ -32,23 +34,59 @@ void close_connection(ConnectionNode* node)
     node->Recycle();
 }
 
-
-int resolve_package_core(char* start,int len
-
-void resolve_package(ConnectionNode* node)
+void close_connection(int fd)
 {
-    char *recvBuf = node->m_recvBuf;
-    bool has_left = false;
-    while(!has_left)
-    {
-        if(node->recvedLen < 4)
-        {
-            return; 
-        }
-        uint32_t msgLen = *(uint32_t*)recvBuf;
-        node->m_msgLen = msgLen;
-
     
+}
+
+int packetize(ConnectionNode* node,char* startPos,int dataLen)
+{
+    if(dataLen< 4)
+    {
+        return 0; 
+    }
+    uint32_t msgLen = *(uint32_t*)startPos & LEN_MASK;
+    if(msgLen>MAX_PACKAGE_SIZE)
+    {
+        //因为数据包有一个大概的范围，更多的是对数据流是否出错进行检测
+        //如果出错，直接断开连接最省事
+        connection_pool[fd].Recycle();
+        return 0;
+    }
+    node->m_msgLen = msgLen;
+    if(msgLen>len)
+    {
+         return 0;
+    }
+
+    //反序列化、发送完整的包
+    char* dataPos = startPos+4;
+    uint32_t typeID = *(uint32_t*)startPos & TYPE_ID_MASK;
+    switch(typeID)
+    {
+    
+    }
+
+    int totalLen = msgLen; //处理的总长度
+    int leftLen = dataLen - msgLen;
+    if(leftLen>0)
+    {
+        totalLen += packetize(node,startPos+msgLen,leftLen); //递归处理
+    }
+
+    return msgLen;
+
+}
+
+int resolve_packet(ConnectionNode* node)
+{
+    int recvedLen = node->recvedLen;
+    char* nodeBuf = node->recvBuf;
+    int ret = packetize(node,nodeBuf,recvedLen);
+    node->recvedLen -= ret;
+    if(node->recvedLen>0)
+    {
+        memcpy(node->recvBuf,node->recvBuf+ret,node->recvedLen);  //解包剩余数据移动到缓冲区前
     }
 }
 
@@ -155,7 +193,6 @@ int main()
 {
     int listenfd = listen_init();
 
-    struct ev_loop * loop;
     loop = EV_DEFAULT;
     ev_io_init (&listen_watcher,accept_cb,listenfd,EV_READ);
     ev_io_start(loop,&listen_watcher);
