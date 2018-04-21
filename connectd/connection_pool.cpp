@@ -8,7 +8,7 @@
 #include "config.h"
 
 
-ConnectionNode::ConnectionNode():m_connfd(0),m_uin(0),m_msgLen(0),m_recvedLen(0)
+ConnectionNode::ConnectionNode():m_connfd(0),m_tempID(-1),m_msgLen(0),m_recvedLen(0)
 {
     m_recvBuf = new char[RECVBUF_LEN];
     memset(m_recvBuf,0,RECVBUF_LEN);
@@ -24,7 +24,7 @@ void ConnectionNode::Recycle()
 {
     memset(m_recvBuf,0,RECVBUF_LEN);
     m_connfd = 0;
-    m_uin = 0;
+    m_tempID = -1;
     m_msgLen = 0;
     m_recvedLen = 0;
 }

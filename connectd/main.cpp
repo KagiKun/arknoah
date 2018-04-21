@@ -2,7 +2,7 @@
 
 int main()
 {
-    Connectd connd;
-    connd.run();
+    Connectd& connd = Connectd::GetInstance();
+    connd.Run();
     return 0;
 }
