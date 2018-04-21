@@ -6,8 +6,8 @@
 
 int main()
 {
-    ShmBus abus(ZONE_ID);
-    int queuefd = abus.getListenFd(CONNECT_ID);
+    ShmBus abus(CONNECT_ID);
+    int queuefd = abus.getListenFd();
     if(queuefd<0)
     {
         printf("get queue fd error");
@@ -23,7 +23,7 @@ int main()
         struct epoll_event evs[100];
         epoll_wait(epollfd,evs,100,-1);
         char recvBuf[100];
-        size_t ret = abus.recv(CONNECT_ID,recvBuf);
-        printf("recv size %ud\n%s\n",ret,recvBuf);
+        size_t ret = abus.recv(recvBuf,100);
+        printf("recv size %ld\n%s\n",ret,recvBuf);
     }
 }

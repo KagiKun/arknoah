@@ -48,14 +48,11 @@ ssize_t ShmQueue::init(key_t key)
             return -1;
         }
     fifofd = open(pathName,0666);
-    int flags = fcntl(fifofd,F_GETFL);
-    flags |= O_NONBLOCK;
-    fcntl(fifofd,F_SETFL,flags);
 
     return 1;
 }
 
-ssize_t ShmQueue::send(void* data,size_t send_size)
+ssize_t ShmQueue::send(void* data,size_t send_size,size_t src,int notifyFd)
 {
     //因为是无锁，所以缓存此次调用的数据
     size_t front = head->front;
@@ -80,6 +77,7 @@ ssize_t ShmQueue::send(void* data,size_t send_size)
         head->rear = send_size-trail_left;
     }
     write(fifofd,&send_size,sizeof(size_t));
+    write(notifyFd,&src,sizeof(src));
     return send_size;
 }
 
@@ -137,33 +135,70 @@ int ShmQueue::getFd()
 ShmBus::ShmBus(size_t localID):localID(localID)
 {
     log_init();
+    const char* path = getPathName(localID);
+    if(access(path,F_OK)<0)
+        if(mkfifo(path,0666)<0)
+        {
+            log_error("mkfifo for bus notify erro");
+            exit(-1);
+        }
+    
+    bus_notify_pipe = open(path,0666);
+
 }
+
 
 ShmBus::~ShmBus()
 {
 /*
-    for(auto pair : keyMap)
+    for(auto pair : queueMap)
     {
         delete pair.second;
     }
 */
 }
 
+const char* ShmBus::getPathName(size_t ID)
+{
+    memset(busPipePath,0,64);
+    snprintf(busPipePath,64,"%s%ld","/tmp/shmbus_notify_pipe",ID);
+    return busPipePath;
+}
+
 size_t ShmBus::send(size_t dstID,void* data,size_t size)
 {
-    key_t key = exchange(localID,dstID);
+    key_t key = getKey(localID,dstID);
     ShmQueue* pShmQueue = getQueue(key);
     if(pShmQueue==NULL)
     {
         log_error("get shm error while sending,srcID = ",__FILE__,__LINE__,dstID);
         return 0;
     }
-    return pShmQueue->send(data,size);
+
+    int busNotifyFd = 0;
+
+    auto it = serverPipeMap.find(key);
+    if(it==serverPipeMap.end())
+    {
+        const char* name = getPathName(dstID);
+        busNotifyFd = open(name,0666);
+        if(busNotifyFd<0)
+        {
+            log_error("dst server is no runing");
+            return 0;
+        }
+
+        serverPipeMap.emplace(make_pair(key,busNotifyFd));
+    }
+
+    return pShmQueue->send(data,size,localID,busNotifyFd);
 }
 
-size_t ShmBus::recv(size_t srcID,void* buf,size_t size)
+size_t ShmBus::recv(void* buf,size_t size)
 {
-    key_t key = exchange(srcID,localID);
+    size_t srcID = 0;
+    read(bus_notify_pipe,&srcID,sizeof(srcID));
+    key_t key = getKey(srcID,localID);
     ShmQueue* pShmQueue = getQueue(key);
     if(pShmQueue==NULL)
     {
@@ -173,7 +208,7 @@ size_t ShmBus::recv(size_t srcID,void* buf,size_t size)
     return pShmQueue->recv(buf,size);
 }
 
-key_t ShmBus::exchange(size_t srcID,size_t dstID)
+key_t ShmBus::getKey(size_t srcID,size_t dstID)
 {
     key_t key = (srcID<<10)+dstID;
     return key;
@@ -182,8 +217,8 @@ key_t ShmBus::exchange(size_t srcID,size_t dstID)
 ShmQueue* ShmBus::getQueue(key_t key)
 {
     ShmQueue* pShmQueue;
-    auto search = keyMap.find(key);
-    if(search!=keyMap.end())
+    auto search = queueMap.find(key);
+    if(search!=queueMap.end())
         pShmQueue = search->second;
     else
     {
@@ -193,14 +228,13 @@ ShmQueue* ShmBus::getQueue(key_t key)
             log_error("shmQueue init error",__FILE__,__LINE__);
             return NULL;
         }
-        keyMap.emplace(make_pair(key,pShmQueue));
+        queueMap.emplace(make_pair(key,pShmQueue));
     }
 
     return pShmQueue;
 }
 
-int ShmBus::getListenFd(size_t srcID)
+int ShmBus::getListenFd()
 {
-    ShmQueue* pShmQueue = getQueue(exchange(srcID,localID));
-    return pShmQueue->getFd();
+    return bus_notify_pipe;
 }

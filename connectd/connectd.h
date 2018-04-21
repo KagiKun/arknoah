@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include "conn_config.h"
 #include "connection_pool.h"
+#include "shmbus.h"
 
 #define LISTEN_BACKLOG 50
 #define CONFIG_PATH "./config.ini"
@@ -41,6 +42,8 @@ private:
     ConnectionNode *m_connectionPool;
     static const ConnConfig& m_config;
     int m_listenfd;
+
+    ShmBus shmBus;
 
     struct ev_loop *main_loop;
     ev_io m_acceptWatcher;

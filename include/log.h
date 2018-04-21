@@ -27,9 +27,7 @@ void log_init()
 #ifdef NO_FILE
     dup2(log_fd,STDOUT_FILENO);
 #endif
-    printf("%s\n", "==================\n
-                    Log Start\n
-                    ==================");
+    printf("%s\n", "==================\nLog Start\n==================");
 }
 
 void log(const char* info)
@@ -37,9 +35,9 @@ void log(const char* info)
     time_t timet = time(NULL);
     struct tm* ptm = localtime(&timet);
     memset(log_buf,0,MAX_LOG_LENGTH);
-    snprintf(buf,MAX_LOG_LENGTH,"Log:%04d.%02d.%02d %02d:%02d:%02d %s\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,info);
+    snprintf(log_buf,MAX_LOG_LENGTH,"Log:%04d.%02d.%02d %02d:%02d:%02d %s\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,info);
 
-    write(STDOUT_FILENO,buf,100);
+    write(STDOUT_FILENO,log_buf,100);
     fsync(STDOUT_FILENO);
 }
 
@@ -48,9 +46,9 @@ void log_error(const char* info)
     time_t timet = time(NULL);
     struct tm* ptm = localtime(&timet);
     memset(log_buf,0,MAX_LOG_LENGTH);
-    snprintf(buf,MAX_LOG_LENGTH,"Error:%04d.%02d.%02d %02d:%02d:%02d %s\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,info);
+    snprintf(log_buf,MAX_LOG_LENGTH,"Error:%04d.%02d.%02d %02d:%02d:%02d %s\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,info);
 
-    write(STDOUT_FILENO,buf,100);
+    write(STDOUT_FILENO,log_buf,100);
     fsync(STDOUT_FILENO);
 }
 
@@ -59,9 +57,9 @@ void log_error(const char* info,const char* file,int line)
     time_t timet = time(NULL);
     struct tm* ptm = localtime(&timet);
     memset(log_buf,0,MAX_LOG_LENGTH);
-    snprintf(buf,MAX_LOG_LENGTH,"Error:%04d.%02d.%02d %02d:%02d:%02d file:%s line:%d %s\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,file,line,info);
+    snprintf(log_buf,MAX_LOG_LENGTH,"Error:%04d.%02d.%02d %02d:%02d:%02d file:%s line:%d %s\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,file,line,info);
 
-    write(STDOUT_FILENO,buf,100);
+    write(STDOUT_FILENO,log_buf,100);
     fsync(STDOUT_FILENO);
 }
 
@@ -70,9 +68,9 @@ void log_error(const char* info,const char* file,int line,size_t in)
     time_t timet = time(NULL);
     struct tm* ptm = localtime(&timet);
     memset(log_buf,0,MAX_LOG_LENGTH);
-    snprintf(buf,MAX_LOG_LENGTH,"Error:%04d.%02d.%02d %02d:%02d:%02d file:%s line:%d %s%ld\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,file,line,info,in);
+    snprintf(log_buf,MAX_LOG_LENGTH,"Error:%04d.%02d.%02d %02d:%02d:%02d file:%s line:%d %s%ld\n",ptm->tm_year+1900,ptm->tm_mon+1,ptm->tm_mday,ptm->tm_hour,ptm->tm_min,ptm->tm_sec,file,line,info,in);
 
-    write(STDOUT_FILENO,buf,strlen(buf));
+    write(STDOUT_FILENO,log_buf,strlen(log_buf));
     fsync(STDOUT_FILENO);
 }
 #endif

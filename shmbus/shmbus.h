@@ -11,7 +11,7 @@
 #define QUEUE_IS_FULL -1
 #define QUEUE_IS_EMPTY -2
 #define NAME_MAX_LENGTH 50
-
+#define BUS_NOTIFY_PATH "/tmp/bus_noityf_pipe"
 
 using namespace std;
 
@@ -33,8 +33,8 @@ public:
     ~ShmQueue();
 
     ssize_t init(key_t key);
-    ssize_t send(void* data,size_t send_size);
-    ssize_t recv(void* dst);
+    ssize_t send(void* data,size_t send_size,size_t srcID,int notifyFd);
+    ssize_t recv(void* dst,size_t recv_size);
     const void* peek(size_t* _size);
 
     int getFd();
@@ -54,14 +54,20 @@ public:
     ShmBus(size_t localID);
     ~ShmBus();
     size_t send(size_t dstID,void* data,size_t size);
-    size_t recv(size_t srcID,void* buf,size_t size);
-    int getListenFd(size_t srcID);
+    size_t recv(void* buf,size_t size);
+
+    int getListenFd();
 
 private:
     size_t localID;
-    map<key_t,ShmQueue*> keyMap;
-    key_t exchange(size_t srcID,size_t dstID);
+    int bus_notify_pipe;
+    char busPipePath[64];
+    map<key_t,int> serverPipeMap;
+    map<key_t,ShmQueue*> queueMap;
+    key_t getKey(size_t srcID,size_t dstID);
     ShmQueue* getQueue(key_t key);
+
+    const char* getPathName(size_t ID);
 
 };
 
