@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <time.h>
+#include "struct_def.h"
 #include "shmbus.h"
 #include "connectd.h"
 #include "protocol.pb.h"
@@ -16,7 +17,11 @@ Connectd::Connectd():m_listenfd(0),main_loop(EV_DEFAULT)
     srandom(time(NULL));
 }
 Connectd::~Connectd()
-{}
+{
+    delete[] m_recvWatchers;
+    delete[] m_timerWatchers;
+ //   delete m_shmBus;
+}
 
 
 Connectd& Connectd::GetInstance()
@@ -25,17 +30,8 @@ Connectd& Connectd::GetInstance()
     return connectd;
 }
 
-void Connectd::Run()
+void Connectd::TcpInit()
 {
-    if(!ConnConfig::GetInstance().Init(CONFIG_PATH))
-    {
-        perror("Config file init failed");
-        exit(-1);
-    }
-    m_connectionPool = new ConnectionNode[ConnConfig::GetInstance().NUM_OF_NODE];
-    m_recvWatchers = new ev_io[ConnConfig::GetInstance().NUM_OF_NODE];
-    m_timerWatchers = new ev_timer[ConnConfig::GetInstance().NUM_OF_NODE];
-
     m_listenfd = socket(AF_INET,SOCK_STREAM|SOCK_NONBLOCK,0);
     if(m_listenfd<0)
     {
@@ -67,13 +63,33 @@ void Connectd::Run()
         exit(1);
     }
 
+}
+
+void Connectd::Run()
+{
+    if(!ConnConfig::GetInstance().Init(CONFIG_PATH))
+    {
+        perror("Config file init failed");
+        exit(-1);
+    }
+    m_connectionPool = new ConnectionNode[ConnConfig::GetInstance().NUM_OF_NODE];
+    m_recvWatchers = new ev_io[ConnConfig::GetInstance().NUM_OF_NODE];
+    m_timerWatchers = new ev_timer[ConnConfig::GetInstance().NUM_OF_NODE];
+
+    m_shmBus.init(ConnConfig::GetInstance().CONNECT_ID);
+
+    TcpInit();
+
     ev_io_init(&m_acceptWatcher,accept_cb,m_listenfd,EV_READ);
     ev_io_start(main_loop,&m_acceptWatcher);
 
-    ev_signal signalWatcher;
-    ev_init(&signalWatcher,sig_cb_stop);
-    ev_signal_set(&signalWatcher,SIGINT);
-    ev_signal_start(main_loop,&signalWatcher);
+    ev_io_init(m_recvWatchers,bus_handle_cb,m_shmBus.getListenFd(),EV_READ);
+    ev_io_start(main_loop,m_recvWatchers);
+
+    ev_signal sw;
+    ev_signal_init(&sw,sig_cb_stop,SIGINT);
+    ev_signal_start(main_loop,&sw);
+
     ev_run(main_loop,0);
 }
 
@@ -97,6 +113,7 @@ int Connectd::packetize(ConnectionNode* node,char* startPos,int dataLen)
         return 0;
     }
     uint32_t msgLen = *(uint32_t*)startPos ;
+    uint32_t packetLen = msgLen + 4;
     if(msgLen>ConnConfig::GetInstance().MAX_PACKAGE_SIZE)
     {
         //因为数据包有一个大概的范围，更多的是对数据流是否出错进行检测
@@ -105,36 +122,36 @@ int Connectd::packetize(ConnectionNode* node,char* startPos,int dataLen)
         return 0;
     }
     node->m_msgLen = msgLen;
-    if(msgLen>dataLen)
+    if(packetLen>dataLen)
     {
-        //未收到完整的包，等待下次数据
-         return 0;
+        //未收到完整的包，缓存并等待下次数据
+        memcpy(node->m_recvBuf,startPos,dataLen);
+        node->m_recvedLen = dataLen;
+        return 0;
     }
 
     printf("dataLen: %d\n msgLen: %d\n",dataLen,msgLen);
 
-    //反序列化、发送完整的包到后面的服务器
-    arknoah::Request requestPkg;
-    if(!requestPkg.ParseFromArray(startPos+4,msgLen))
-    {
-        printf("Parse error\n");
-        exit(1);
-    }
-    std::cout << requestPkg.proto_head().passwd();
-    switch(requestPkg.proto_head().cmd())
-    {
-        case arknoah::Request_head_PackageType_INIT:
-            printf("get inint\n");
-    }
+    //组装BusHead、发送至DisPatch服务器
+
+    BusPacket *packet = (BusPacket*)busSendBuf;
+    BusHead *head = (BusHead*)packet;
+    head->node = node;
+    head->tempID = node->m_tempID;
+    head->dst = ConnConfig::GetInstance().DISPATCH_ID;
+    head->src = ConnConfig::GetInstance().CONNECT_ID;
+    memcpy(packet->data,startPos+4,msgLen);
+    m_shmBus.send(ConnConfig::GetInstance().DISPATCH_ID,packet,sizeof(BusHead)+msgLen);
+
     //
-    int totalLen = msgLen; //处理的总长度
-    int leftLen = dataLen - msgLen;
+    int totalLen = packetLen; //处理的总长度
+    int leftLen = dataLen - packetLen;
     if(leftLen>0)
     {
-        totalLen += packetize(node,startPos+msgLen,leftLen); //递归处理
+        totalLen += packetize(node,startPos+packetLen,leftLen); //递归处理
     }
 
-    return msgLen;
+    return packetLen;
 
 }
 
@@ -156,12 +173,10 @@ void recv_cb(struct ev_loop *loop, ev_io *watcher,int revent)
     printf("recv_cb\n");
 #endif
     int fd = watcher->fd;
-    char recv_buf[RECVBUF_LEN];
-    bzero(recv_buf,RECVBUF_LEN);
-
+    char *socketRecvBuf = Connectd::GetInstance().socketRecvBuf;
     ConnectionNode* connection_pool = Connectd::GetInstance().m_connectionPool;
 again:
-    int ret = recv(fd,recv_buf,RECVBUF_LEN,0);
+    int ret = recv(fd,socketRecvBuf,RECVBUF_LEN,0);
     if(ret<0)
     {
         if(errno==EINTR)
@@ -187,7 +202,7 @@ again:
     {
         //新旧数据总长小于缓存
         memcpy( connection_pool[fd].m_recvBuf + recvedLen,
-                recv_buf,
+                socketRecvBuf,
                 ret);
         recvedLen += ret;
     }
@@ -196,7 +211,7 @@ again:
         //大于缓存，先处理一段数据
         int diff = RECVBUF_LEN - recvedLen;
         memcpy( connection_pool[fd].m_recvBuf + recvedLen,
-                recv_buf,
+                socketRecvBuf,
                 diff);
         recvedLen += diff;
         Connectd::GetInstance().ResolvePacket(connection_pool+fd);
@@ -206,7 +221,7 @@ again:
             Connectd::GetInstance().CloseConnection(fd);
         }
         memcpy( connection_pool[fd].m_recvBuf + recvedLen,
-                recv_buf,
+                socketRecvBuf,
                 ret - diff);
         recvedLen += (ret-diff);
     }
@@ -214,7 +229,7 @@ again:
 
     ev_timer *timer_watcher =  Connectd::GetInstance().m_timerWatchers + fd;
     ev_init(timer_watcher,timeout_cb);
-    timer_watcher->repeat = 300;
+    timer_watcher->repeat = TIMEOUT_SEC;
     ev_timer_again(loop,timer_watcher);
 }
 
@@ -243,7 +258,6 @@ void accept_cb(struct ev_loop *loop, ev_io *watcher,int revent)
     ev_timer_start(loop,&timer_watcher[connfd]);
 
     Connectd::GetInstance().m_connectionPool[connfd].m_tempID = random();
-    printf("new tempID:%d\n",Connectd::GetInstance().m_connectionPool[connfd].m_tempID);
 }
 
 void timeout_cb(struct ev_loop *loop,ev_timer *watcher,int revent)
@@ -253,8 +267,27 @@ void timeout_cb(struct ev_loop *loop,ev_timer *watcher,int revent)
 
 void sig_cb_stop(struct ev_loop *loop,ev_signal *watcher,int revent)
 {
-    printf("stop loop\n");
+    printf("stop connectd server\n");
     ev_break(loop,EVBREAK_ALL);
+}
+
+void bus_handle_cb(struct ev_loop *loop,ev_io *watcher,int revent)
+{
+    char *busRecvBuf = Connectd::GetInstance().busRecvBuf;
+    size_t ret = Connectd::GetInstance().m_shmBus.recv(busRecvBuf,MAX_BUS_PACKET);
+    if(ret==0)
+    {
+        printf("shmbus recv error");
+        return;
+    }
+    BusPacket *packet = (BusPacket*)busRecvBuf;
+    BusHead *head = (BusHead*)packet;
+    if(head->node->m_tempID != head->tempID)
+    {
+        printf("origin client is log out");
+        return;
+    }
+    write(head->node->m_connfd,&packet->dataLen,packet->dataLen+4);
 }
 
 void set_nonblocking(int fd)

@@ -11,5 +11,13 @@ recv:test_recv.cpp shmbus.cpp
 busd:bus.cpp 
 	g++ bus.cpp -I../include -I./ -o bus -std=c++11
 
+so:
+	g++ shmbus.cpp -I./ -I../include -fPIC -shared -o libshmbus.so -std=c++11
+
+a:
+	g++ shmbus.cpp -I./ -I../include -c -o shmbus.o -std=c++11
+	ar rcs libshmbus.a shmbus.o
+	rm shmbus.o
+
 clear:
-	rm send recv bus
+	rm send recv bus libshmbus*

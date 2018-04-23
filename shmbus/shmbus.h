@@ -51,12 +51,13 @@ private:
 class ShmBus
 {
 public:
-    ShmBus(size_t localID);
+    ShmBus();
     ~ShmBus();
     size_t send(size_t dstID,void* data,size_t size);
     size_t recv(void* buf,size_t size);
 
     int getListenFd();
+    void init(size_t localID_);
 
 private:
     size_t localID;

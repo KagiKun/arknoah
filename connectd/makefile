@@ -1,5 +1,5 @@
 connectd:
-	g++ *.cpp -o connectd -I../include -lev -lprotobuf -std=c++11 -g
+	g++ *.cpp -o connectd -I../include -I../shmbus -L../shmbus -lshmbus -lev -lprotobuf -std=c++11 -g
 
 
 clear:

@@ -1,17 +1,23 @@
-#include "./connection_pool.h"
+#include "../connectd/connection_pool.h"
 
-typedef SERVER_ID size_t
+typedef size_t SERVER_ID;
+
+#pragma pack(push)
+#pragma pack(1)
 
 struct BusHead
 {
-    ConnectionNode* connectionNode;
-    SERVER_ID Src;
-    SERVER_ID Dst;
-    size_t dataSize;
+    ConnectionNode* node;
+    SERVER_ID src;
+    SERVER_ID dst;
+    size_t tempID;
 };
 
 struct BusPacket
 {
     BusHead busHead;
-    char buffer[];  //柔性数组，用于存储序列化后的数据
+    uint32_t dataLen;
+    char data[];  //柔性数组，用于存储序列化后的数据
 };
+
+#pragma pack(pop)

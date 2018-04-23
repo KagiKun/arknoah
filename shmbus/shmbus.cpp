@@ -17,7 +17,7 @@ ShmQueue::ShmQueue()
 
 ShmQueue::~ShmQueue()
 {
-    unlink(pathName);
+ //   unlink(pathName);
 }
 
 
@@ -40,7 +40,7 @@ ssize_t ShmQueue::init(key_t key)
     head = static_cast<QueueHead*>(addr);
 
     memset(pathName,0,NAME_MAX_LENGTH);
-    snprintf(pathName,NAME_MAX_LENGTH,"./%d",shmid);
+    snprintf(pathName,NAME_MAX_LENGTH,"/tmp/fifo:%d",shmid);
     if(access(pathName,F_OK)<0)
         if(mkfifo(pathName,0666)<0)
         {
@@ -90,7 +90,7 @@ ssize_t ShmQueue::recv(void* dst,size_t recv_size)
 
     size_t msg_size = 0;
     size_t diff_size = 0;
-    read(fifofd,&msg_size,sizeof(size_t));
+    size_t ret = read(fifofd,&msg_size,sizeof(size_t));
     if(msg_size>recv_size)     //如果实际发过来的包比接收缓存还要大，那么只接收预订缓存大小，并认定此包发生错误，将该包的后续舍去
     {
         log_error("The recv buffer of shmqueue is too small\n");
@@ -132,9 +132,23 @@ int ShmQueue::getFd()
 }
 
 
-ShmBus::ShmBus(size_t localID):localID(localID)
+ShmBus::ShmBus()
 {
     log_init();
+}
+
+
+ShmBus::~ShmBus()
+{
+    for(auto pair : queueMap)
+    {
+        delete pair.second;
+    }
+}
+
+void ShmBus::init(size_t localID_)
+{
+    localID = localID_;
     const char* path = getPathName(localID);
     if(access(path,F_OK)<0)
         if(mkfifo(path,0666)<0)
@@ -145,17 +159,7 @@ ShmBus::ShmBus(size_t localID):localID(localID)
     
     bus_notify_pipe = open(path,0666);
 
-}
-
-
-ShmBus::~ShmBus()
-{
-/*
-    for(auto pair : queueMap)
-    {
-        delete pair.second;
-    }
-*/
+    
 }
 
 const char* ShmBus::getPathName(size_t ID)
@@ -190,20 +194,22 @@ size_t ShmBus::send(size_t dstID,void* data,size_t size)
 
         serverPipeMap.emplace(make_pair(key,busNotifyFd));
     }
+    else
+        busNotifyFd = it->second;
 
     return pShmQueue->send(data,size,localID,busNotifyFd);
 }
 
 size_t ShmBus::recv(void* buf,size_t size)
 {
-    size_t srcID = 0;
+    size_t srcID;
     read(bus_notify_pipe,&srcID,sizeof(srcID));
     key_t key = getKey(srcID,localID);
     ShmQueue* pShmQueue = getQueue(key);
     if(pShmQueue==NULL)
     {
         log_error("get shm error while recving,srcID = ",__FILE__,__LINE__,srcID);
-        return 0;
+        return -1;
     }
     return pShmQueue->recv(buf,size);
 }
