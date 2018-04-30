@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 
-#define PATH "../arknoah.log"
+#define PATH "/tem/ShmBus.log"
 #define MAX_LOG_LENGTH 100
 //#define NO_FILE
 
@@ -27,7 +27,6 @@ void log_init()
 #ifdef NO_FILE
     dup2(log_fd,STDOUT_FILENO);
 #endif
-    printf("%s\n", "==================\nLog Start\n==================");
 }
 
 void log(const char* info)

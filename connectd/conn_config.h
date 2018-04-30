@@ -23,8 +23,8 @@ public:
     size_t NUM_OF_NODE;
     size_t MAX_PACKAGE_SIZE;
 
-    size_t CONNECT_ID;
-    size_t DISPATCH_ID;
+    size_t CONNECTD_ID;
+    size_t DISPATCHD_ID;
 };
 
 #endif

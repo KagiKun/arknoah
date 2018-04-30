@@ -9,6 +9,8 @@
 #include "protocol.pb.h"
 #include <string>
 
+using namespace Arknoah;
+
 int main()
 {
     int fd = socket(AF_INET,SOCK_STREAM,0);
@@ -24,10 +26,10 @@ int main()
         exit(1);
     }
     printf("connection success\n");
-    arknoah::Request request;
-    request.mutable_proto_head()->set_cmd(arknoah::Request_head::INIT);
-    request.mutable_proto_head()->set_passwd("464379852luo***");
-    request.mutable_proto_head()->set_uid(123);
+    Arknoah::Request request;
+    request.mutable_head()->set_cmd(Arknoah::Request::Head::LogIn);
+    request.mutable_head()->set_passwd("464379852luo***");
+    request.mutable_head()->set_uid(123);
     std::string sendbuf;
     request.SerializeToString(&sendbuf);
     char* byteArry = new char[sendbuf.length()+4];
@@ -35,13 +37,15 @@ int main()
     memcpy(byteArry+4,sendbuf.data(),sendbuf.length());
     printf("serialize size:%d\n",sendbuf.length());
     write(fd,byteArry,sendbuf.length()+4);
-    printf("send complete\n");
+    printf("send complete\n sleep\n");
+    sleep(15);
+    printf("sleep time out\n");
 
-    printf("test\n");
+
     uint32_t msgLen = *(uint32_t*)byteArry;
     std::string s_data(byteArry+4,byteArry+5+msgLen);
-    arknoah::Request testPkg;
-    if(!testPkg.ParseFromArray(byteArry+4,msgLen))
+    Arknoah::Request testPkg;
+    if(testPkg.ParseFromArray(byteArry+4,msgLen))
     {
         printf("parse error\n");
     }

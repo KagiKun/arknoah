@@ -31,16 +31,16 @@
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
-namespace arknoah {
+namespace Arknoah {
 class Request;
 class RequestDefaultTypeInternal;
 extern RequestDefaultTypeInternal _Request_default_instance_;
-class Request_head;
-class Request_headDefaultTypeInternal;
-extern Request_headDefaultTypeInternal _Request_head_default_instance_;
-}  // namespace arknoah
+class Request_Head;
+class Request_HeadDefaultTypeInternal;
+extern Request_HeadDefaultTypeInternal _Request_Head_default_instance_;
+}  // namespace Arknoah
 
-namespace arknoah {
+namespace Arknoah {
 
 namespace protobuf_protocol_2eproto {
 // Internal implementation detail -- do not call these.
@@ -56,63 +56,83 @@ void AddDescriptors();
 void InitDefaults();
 }  // namespace protobuf_protocol_2eproto
 
-enum Request_head_PackageType {
-  Request_head_PackageType_SIGN_UP = 0,
-  Request_head_PackageType_SIGN_IN = 1,
-  Request_head_PackageType_INIT = 3,
-  Request_head_PackageType_Request_head_PackageType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
-  Request_head_PackageType_Request_head_PackageType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+enum Request_Head_CMDType {
+  Request_Head_CMDType_SignUp = 0,
+  Request_Head_CMDType_LogIn = 1,
+  Request_Head_CMDType_Request_Head_CMDType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  Request_Head_CMDType_Request_Head_CMDType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
-bool Request_head_PackageType_IsValid(int value);
-const Request_head_PackageType Request_head_PackageType_PackageType_MIN = Request_head_PackageType_SIGN_UP;
-const Request_head_PackageType Request_head_PackageType_PackageType_MAX = Request_head_PackageType_INIT;
-const int Request_head_PackageType_PackageType_ARRAYSIZE = Request_head_PackageType_PackageType_MAX + 1;
+bool Request_Head_CMDType_IsValid(int value);
+const Request_Head_CMDType Request_Head_CMDType_CMDType_MIN = Request_Head_CMDType_SignUp;
+const Request_Head_CMDType Request_Head_CMDType_CMDType_MAX = Request_Head_CMDType_LogIn;
+const int Request_Head_CMDType_CMDType_ARRAYSIZE = Request_Head_CMDType_CMDType_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* Request_head_PackageType_descriptor();
-inline const ::std::string& Request_head_PackageType_Name(Request_head_PackageType value) {
+const ::google::protobuf::EnumDescriptor* Request_Head_CMDType_descriptor();
+inline const ::std::string& Request_Head_CMDType_Name(Request_Head_CMDType value) {
   return ::google::protobuf::internal::NameOfEnum(
-    Request_head_PackageType_descriptor(), value);
+    Request_Head_CMDType_descriptor(), value);
 }
-inline bool Request_head_PackageType_Parse(
-    const ::std::string& name, Request_head_PackageType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Request_head_PackageType>(
-    Request_head_PackageType_descriptor(), name, value);
+inline bool Request_Head_CMDType_Parse(
+    const ::std::string& name, Request_Head_CMDType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Request_Head_CMDType>(
+    Request_Head_CMDType_descriptor(), name, value);
+}
+enum Request_Head_ServerID {
+  Request_Head_ServerID_Zoned = 0,
+  Request_Head_ServerID_Mask = 3840,
+  Request_Head_ServerID_Request_Head_ServerID_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  Request_Head_ServerID_Request_Head_ServerID_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+};
+bool Request_Head_ServerID_IsValid(int value);
+const Request_Head_ServerID Request_Head_ServerID_ServerID_MIN = Request_Head_ServerID_Zoned;
+const Request_Head_ServerID Request_Head_ServerID_ServerID_MAX = Request_Head_ServerID_Mask;
+const int Request_Head_ServerID_ServerID_ARRAYSIZE = Request_Head_ServerID_ServerID_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* Request_Head_ServerID_descriptor();
+inline const ::std::string& Request_Head_ServerID_Name(Request_Head_ServerID value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    Request_Head_ServerID_descriptor(), value);
+}
+inline bool Request_Head_ServerID_Parse(
+    const ::std::string& name, Request_Head_ServerID* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Request_Head_ServerID>(
+    Request_Head_ServerID_descriptor(), name, value);
 }
 // ===================================================================
 
-class Request_head : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:arknoah.Request.head) */ {
+class Request_Head : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:Arknoah.Request.Head) */ {
  public:
-  Request_head();
-  virtual ~Request_head();
+  Request_Head();
+  virtual ~Request_Head();
 
-  Request_head(const Request_head& from);
+  Request_Head(const Request_Head& from);
 
-  inline Request_head& operator=(const Request_head& from) {
+  inline Request_Head& operator=(const Request_Head& from) {
     CopyFrom(from);
     return *this;
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_head& default_instance();
+  static const Request_Head& default_instance();
 
-  static inline const Request_head* internal_default_instance() {
-    return reinterpret_cast<const Request_head*>(
-               &_Request_head_default_instance_);
+  static inline const Request_Head* internal_default_instance() {
+    return reinterpret_cast<const Request_Head*>(
+               &_Request_Head_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
     0;
 
-  void Swap(Request_head* other);
+  void Swap(Request_Head* other);
 
   // implements Message ----------------------------------------------
 
-  inline Request_head* New() const PROTOBUF_FINAL { return New(NULL); }
+  inline Request_Head* New() const PROTOBUF_FINAL { return New(NULL); }
 
-  Request_head* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  Request_Head* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
   void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
   void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
-  void CopyFrom(const Request_head& from);
-  void MergeFrom(const Request_head& from);
+  void CopyFrom(const Request_Head& from);
+  void MergeFrom(const Request_Head& from);
   void Clear() PROTOBUF_FINAL;
   bool IsInitialized() const PROTOBUF_FINAL;
 
@@ -128,7 +148,7 @@ class Request_head : public ::google::protobuf::Message /* @@protoc_insertion_po
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const PROTOBUF_FINAL;
-  void InternalSwap(Request_head* other);
+  void InternalSwap(Request_Head* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -142,32 +162,56 @@ class Request_head : public ::google::protobuf::Message /* @@protoc_insertion_po
 
   // nested types ----------------------------------------------------
 
-  typedef Request_head_PackageType PackageType;
-  static const PackageType SIGN_UP =
-    Request_head_PackageType_SIGN_UP;
-  static const PackageType SIGN_IN =
-    Request_head_PackageType_SIGN_IN;
-  static const PackageType INIT =
-    Request_head_PackageType_INIT;
-  static inline bool PackageType_IsValid(int value) {
-    return Request_head_PackageType_IsValid(value);
+  typedef Request_Head_CMDType CMDType;
+  static const CMDType SignUp =
+    Request_Head_CMDType_SignUp;
+  static const CMDType LogIn =
+    Request_Head_CMDType_LogIn;
+  static inline bool CMDType_IsValid(int value) {
+    return Request_Head_CMDType_IsValid(value);
   }
-  static const PackageType PackageType_MIN =
-    Request_head_PackageType_PackageType_MIN;
-  static const PackageType PackageType_MAX =
-    Request_head_PackageType_PackageType_MAX;
-  static const int PackageType_ARRAYSIZE =
-    Request_head_PackageType_PackageType_ARRAYSIZE;
+  static const CMDType CMDType_MIN =
+    Request_Head_CMDType_CMDType_MIN;
+  static const CMDType CMDType_MAX =
+    Request_Head_CMDType_CMDType_MAX;
+  static const int CMDType_ARRAYSIZE =
+    Request_Head_CMDType_CMDType_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor*
-  PackageType_descriptor() {
-    return Request_head_PackageType_descriptor();
+  CMDType_descriptor() {
+    return Request_Head_CMDType_descriptor();
   }
-  static inline const ::std::string& PackageType_Name(PackageType value) {
-    return Request_head_PackageType_Name(value);
+  static inline const ::std::string& CMDType_Name(CMDType value) {
+    return Request_Head_CMDType_Name(value);
   }
-  static inline bool PackageType_Parse(const ::std::string& name,
-      PackageType* value) {
-    return Request_head_PackageType_Parse(name, value);
+  static inline bool CMDType_Parse(const ::std::string& name,
+      CMDType* value) {
+    return Request_Head_CMDType_Parse(name, value);
+  }
+
+  typedef Request_Head_ServerID ServerID;
+  static const ServerID Zoned =
+    Request_Head_ServerID_Zoned;
+  static const ServerID Mask =
+    Request_Head_ServerID_Mask;
+  static inline bool ServerID_IsValid(int value) {
+    return Request_Head_ServerID_IsValid(value);
+  }
+  static const ServerID ServerID_MIN =
+    Request_Head_ServerID_ServerID_MIN;
+  static const ServerID ServerID_MAX =
+    Request_Head_ServerID_ServerID_MAX;
+  static const int ServerID_ARRAYSIZE =
+    Request_Head_ServerID_ServerID_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  ServerID_descriptor() {
+    return Request_Head_ServerID_descriptor();
+  }
+  static inline const ::std::string& ServerID_Name(ServerID value) {
+    return Request_Head_ServerID_Name(value);
+  }
+  static inline bool ServerID_Parse(const ::std::string& name,
+      ServerID* value) {
+    return Request_Head_ServerID_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
@@ -192,13 +236,13 @@ class Request_head : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::google::protobuf::uint32 uid() const;
   void set_uid(::google::protobuf::uint32 value);
 
-  // .arknoah.Request.head.PackageType cmd = 3;
+  // .Arknoah.Request.Head.CMDType cmd = 3;
   void clear_cmd();
   static const int kCmdFieldNumber = 3;
-  ::arknoah::Request_head_PackageType cmd() const;
-  void set_cmd(::arknoah::Request_head_PackageType value);
+  ::Arknoah::Request_Head_CMDType cmd() const;
+  void set_cmd(::Arknoah::Request_Head_CMDType value);
 
-  // @@protoc_insertion_point(class_scope:arknoah.Request.head)
+  // @@protoc_insertion_point(class_scope:Arknoah.Request.Head)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -210,7 +254,7 @@ class Request_head : public ::google::protobuf::Message /* @@protoc_insertion_po
 };
 // -------------------------------------------------------------------
 
-class Request : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:arknoah.Request) */ {
+class Request : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:Arknoah.Request) */ {
  public:
   Request();
   virtual ~Request();
@@ -272,24 +316,24 @@ class Request : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 
   // nested types ----------------------------------------------------
 
-  typedef Request_head head;
+  typedef Request_Head Head;
 
   // accessors -------------------------------------------------------
 
-  // .arknoah.Request.head proto_head = 1;
-  bool has_proto_head() const;
-  void clear_proto_head();
-  static const int kProtoHeadFieldNumber = 1;
-  const ::arknoah::Request_head& proto_head() const;
-  ::arknoah::Request_head* mutable_proto_head();
-  ::arknoah::Request_head* release_proto_head();
-  void set_allocated_proto_head(::arknoah::Request_head* proto_head);
+  // .Arknoah.Request.Head head = 1;
+  bool has_head() const;
+  void clear_head();
+  static const int kHeadFieldNumber = 1;
+  const ::Arknoah::Request_Head& head() const;
+  ::Arknoah::Request_Head* mutable_head();
+  ::Arknoah::Request_Head* release_head();
+  void set_allocated_head(::Arknoah::Request_Head* head);
 
-  // @@protoc_insertion_point(class_scope:arknoah.Request)
+  // @@protoc_insertion_point(class_scope:Arknoah.Request)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::arknoah::Request_head* proto_head_;
+  ::Arknoah::Request_Head* head_;
   mutable int _cached_size_;
   friend struct protobuf_protocol_2eproto::TableStruct;
 };
@@ -299,130 +343,130 @@ class Request : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 // ===================================================================
 
 #if !PROTOBUF_INLINE_NOT_IN_HEADERS
-// Request_head
+// Request_Head
 
 // uint32 uid = 1;
-inline void Request_head::clear_uid() {
+inline void Request_Head::clear_uid() {
   uid_ = 0u;
 }
-inline ::google::protobuf::uint32 Request_head::uid() const {
-  // @@protoc_insertion_point(field_get:arknoah.Request.head.uid)
+inline ::google::protobuf::uint32 Request_Head::uid() const {
+  // @@protoc_insertion_point(field_get:Arknoah.Request.Head.uid)
   return uid_;
 }
-inline void Request_head::set_uid(::google::protobuf::uint32 value) {
+inline void Request_Head::set_uid(::google::protobuf::uint32 value) {
   
   uid_ = value;
-  // @@protoc_insertion_point(field_set:arknoah.Request.head.uid)
+  // @@protoc_insertion_point(field_set:Arknoah.Request.Head.uid)
 }
 
 // string passwd = 2;
-inline void Request_head::clear_passwd() {
+inline void Request_Head::clear_passwd() {
   passwd_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& Request_head::passwd() const {
-  // @@protoc_insertion_point(field_get:arknoah.Request.head.passwd)
+inline const ::std::string& Request_Head::passwd() const {
+  // @@protoc_insertion_point(field_get:Arknoah.Request.Head.passwd)
   return passwd_.GetNoArena();
 }
-inline void Request_head::set_passwd(const ::std::string& value) {
+inline void Request_Head::set_passwd(const ::std::string& value) {
   
   passwd_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:arknoah.Request.head.passwd)
+  // @@protoc_insertion_point(field_set:Arknoah.Request.Head.passwd)
 }
 #if LANG_CXX11
-inline void Request_head::set_passwd(::std::string&& value) {
+inline void Request_Head::set_passwd(::std::string&& value) {
   
   passwd_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:arknoah.Request.head.passwd)
+  // @@protoc_insertion_point(field_set_rvalue:Arknoah.Request.Head.passwd)
 }
 #endif
-inline void Request_head::set_passwd(const char* value) {
+inline void Request_Head::set_passwd(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   passwd_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:arknoah.Request.head.passwd)
+  // @@protoc_insertion_point(field_set_char:Arknoah.Request.Head.passwd)
 }
-inline void Request_head::set_passwd(const char* value, size_t size) {
+inline void Request_Head::set_passwd(const char* value, size_t size) {
   
   passwd_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:arknoah.Request.head.passwd)
+  // @@protoc_insertion_point(field_set_pointer:Arknoah.Request.Head.passwd)
 }
-inline ::std::string* Request_head::mutable_passwd() {
+inline ::std::string* Request_Head::mutable_passwd() {
   
-  // @@protoc_insertion_point(field_mutable:arknoah.Request.head.passwd)
+  // @@protoc_insertion_point(field_mutable:Arknoah.Request.Head.passwd)
   return passwd_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* Request_head::release_passwd() {
-  // @@protoc_insertion_point(field_release:arknoah.Request.head.passwd)
+inline ::std::string* Request_Head::release_passwd() {
+  // @@protoc_insertion_point(field_release:Arknoah.Request.Head.passwd)
   
   return passwd_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void Request_head::set_allocated_passwd(::std::string* passwd) {
+inline void Request_Head::set_allocated_passwd(::std::string* passwd) {
   if (passwd != NULL) {
     
   } else {
     
   }
   passwd_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), passwd);
-  // @@protoc_insertion_point(field_set_allocated:arknoah.Request.head.passwd)
+  // @@protoc_insertion_point(field_set_allocated:Arknoah.Request.Head.passwd)
 }
 
-// .arknoah.Request.head.PackageType cmd = 3;
-inline void Request_head::clear_cmd() {
+// .Arknoah.Request.Head.CMDType cmd = 3;
+inline void Request_Head::clear_cmd() {
   cmd_ = 0;
 }
-inline ::arknoah::Request_head_PackageType Request_head::cmd() const {
-  // @@protoc_insertion_point(field_get:arknoah.Request.head.cmd)
-  return static_cast< ::arknoah::Request_head_PackageType >(cmd_);
+inline ::Arknoah::Request_Head_CMDType Request_Head::cmd() const {
+  // @@protoc_insertion_point(field_get:Arknoah.Request.Head.cmd)
+  return static_cast< ::Arknoah::Request_Head_CMDType >(cmd_);
 }
-inline void Request_head::set_cmd(::arknoah::Request_head_PackageType value) {
+inline void Request_Head::set_cmd(::Arknoah::Request_Head_CMDType value) {
   
   cmd_ = value;
-  // @@protoc_insertion_point(field_set:arknoah.Request.head.cmd)
+  // @@protoc_insertion_point(field_set:Arknoah.Request.Head.cmd)
 }
 
 // -------------------------------------------------------------------
 
 // Request
 
-// .arknoah.Request.head proto_head = 1;
-inline bool Request::has_proto_head() const {
-  return this != internal_default_instance() && proto_head_ != NULL;
+// .Arknoah.Request.Head head = 1;
+inline bool Request::has_head() const {
+  return this != internal_default_instance() && head_ != NULL;
 }
-inline void Request::clear_proto_head() {
-  if (GetArenaNoVirtual() == NULL && proto_head_ != NULL) delete proto_head_;
-  proto_head_ = NULL;
+inline void Request::clear_head() {
+  if (GetArenaNoVirtual() == NULL && head_ != NULL) delete head_;
+  head_ = NULL;
 }
-inline const ::arknoah::Request_head& Request::proto_head() const {
-  // @@protoc_insertion_point(field_get:arknoah.Request.proto_head)
-  return proto_head_ != NULL ? *proto_head_
-                         : *::arknoah::Request_head::internal_default_instance();
+inline const ::Arknoah::Request_Head& Request::head() const {
+  // @@protoc_insertion_point(field_get:Arknoah.Request.head)
+  return head_ != NULL ? *head_
+                         : *::Arknoah::Request_Head::internal_default_instance();
 }
-inline ::arknoah::Request_head* Request::mutable_proto_head() {
+inline ::Arknoah::Request_Head* Request::mutable_head() {
   
-  if (proto_head_ == NULL) {
-    proto_head_ = new ::arknoah::Request_head;
+  if (head_ == NULL) {
+    head_ = new ::Arknoah::Request_Head;
   }
-  // @@protoc_insertion_point(field_mutable:arknoah.Request.proto_head)
-  return proto_head_;
+  // @@protoc_insertion_point(field_mutable:Arknoah.Request.head)
+  return head_;
 }
-inline ::arknoah::Request_head* Request::release_proto_head() {
-  // @@protoc_insertion_point(field_release:arknoah.Request.proto_head)
+inline ::Arknoah::Request_Head* Request::release_head() {
+  // @@protoc_insertion_point(field_release:Arknoah.Request.head)
   
-  ::arknoah::Request_head* temp = proto_head_;
-  proto_head_ = NULL;
+  ::Arknoah::Request_Head* temp = head_;
+  head_ = NULL;
   return temp;
 }
-inline void Request::set_allocated_proto_head(::arknoah::Request_head* proto_head) {
-  delete proto_head_;
-  proto_head_ = proto_head;
-  if (proto_head) {
+inline void Request::set_allocated_head(::Arknoah::Request_Head* head) {
+  delete head_;
+  head_ = head;
+  if (head) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_set_allocated:arknoah.Request.proto_head)
+  // @@protoc_insertion_point(field_set_allocated:Arknoah.Request.head)
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -432,16 +476,21 @@ inline void Request::set_allocated_proto_head(::arknoah::Request_head* proto_hea
 // @@protoc_insertion_point(namespace_scope)
 
 
-}  // namespace arknoah
+}  // namespace Arknoah
 
 #ifndef SWIG
 namespace google {
 namespace protobuf {
 
-template <> struct is_proto_enum< ::arknoah::Request_head_PackageType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::Arknoah::Request_Head_CMDType> : ::google::protobuf::internal::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::arknoah::Request_head_PackageType>() {
-  return ::arknoah::Request_head_PackageType_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::Arknoah::Request_Head_CMDType>() {
+  return ::Arknoah::Request_Head_CMDType_descriptor();
+}
+template <> struct is_proto_enum< ::Arknoah::Request_Head_ServerID> : ::google::protobuf::internal::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Arknoah::Request_Head_ServerID>() {
+  return ::Arknoah::Request_Head_ServerID_descriptor();
 }
 
 }  // namespace protobuf

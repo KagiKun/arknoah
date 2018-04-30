@@ -16,8 +16,16 @@ bool ConnConfig::Init(string pathName)
 {
     INIReader reader(pathName);
     if(reader.ParseError()<0)
+    {
+        printf("prase ini file failed\n");
         return false;
+    }
     set<string> sections = reader.Sections();
+    if(sections.find("BUS_ID")==sections.end())
+    {
+        printf("config file must have \"BUS_ID\" section\n");
+        return false;
+    }
     for(const string& se : sections)
     {
         if(se.compare("SERVER")==0)
@@ -30,8 +38,8 @@ bool ConnConfig::Init(string pathName)
         }
         else if(se.compare("BUS_ID")==0)
         {
-            CONNECT_ID = reader.GetInteger(se,"CONNECT_ID",1);
-            DISPATCH_ID = reader.GetInteger(se,"DISPATCH_ID",2);
+            CONNECTD_ID = reader.GetInteger(se,"CONNECTD_ID",1);
+            DISPATCHD_ID = reader.GetInteger(se,"DISPATCHD_ID",2);
         }
     }
     return true;

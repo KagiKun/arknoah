@@ -9,8 +9,8 @@
 #include "shmbus.h"
 
 #define LISTEN_BACKLOG 50
-#define MAX_BUS_PACKET 1024
-#define TIMEOUT_SEC 300
+#define MAX_BUS_PACKAGE 1024
+#define TIMEOUT_SEC 10
 #define CONFIG_PATH "./config.ini"
 
 class Connectd
@@ -31,7 +31,7 @@ private:
 public:
     static Connectd& GetInstance();
     void Run();
-    void ResolvePacket(ConnectionNode* node);
+    void ResolvePackage(ConnectionNode* node);
     void CloseConnection(int fd);
     void CloseConnection(ConnectionNode* node);
 
@@ -52,8 +52,8 @@ private:
     ev_timer *m_timerWatchers;
     ShmBus m_shmBus;
     char socketRecvBuf[RECVBUF_LEN];
-    char busSendBuf[MAX_BUS_PACKET];
-    char busRecvBuf[MAX_BUS_PACKET];
+    char busSendBuf[MAX_BUS_PACKAGE];
+    char busRecvBuf[MAX_BUS_PACKAGE];
 
     void TcpInit();
     int packetize(ConnectionNode* node,char* startPos,int dataLen);

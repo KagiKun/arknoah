@@ -1,19 +1,24 @@
 syntax = "proto3";
 
-package arknoah;
+package Arknoah;
 
 message Request{
-    message head{
+    message Head{
        uint32 uid = 1;
        string passwd = 2;
-       enum PackageType{
-            SIGN_UP = 0;
-            SIGN_IN = 1;
-            INIT = 3;
+       enum CMDType{
+            SignUp = 0;
+            LogIn= 1;
        }
-       PackageType cmd = 3;
+       CMDType cmd = 3;
+
+        enum ServerID
+        {
+            Zoned = 0;
+            Mask = 3840;  //0xf00
+        }
     }
 
-    head proto_head = 1;
+    Head head = 1;
 
 }

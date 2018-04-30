@@ -76,7 +76,7 @@ void Connectd::Run()
     m_recvWatchers = new ev_io[ConnConfig::GetInstance().NUM_OF_NODE];
     m_timerWatchers = new ev_timer[ConnConfig::GetInstance().NUM_OF_NODE];
 
-    m_shmBus.init(ConnConfig::GetInstance().CONNECT_ID);
+    m_shmBus.init(ConnConfig::GetInstance().CONNECTD_ID);
 
     TcpInit();
 
@@ -95,6 +95,7 @@ void Connectd::Run()
 
 void Connectd::CloseConnection(ConnectionNode* node)
 {
+    printf("need close:%d\n",node->m_connfd);
     CloseConnection(node->m_connfd);
 }
 
@@ -113,7 +114,7 @@ int Connectd::packetize(ConnectionNode* node,char* startPos,int dataLen)
         return 0;
     }
     uint32_t msgLen = *(uint32_t*)startPos ;
-    uint32_t packetLen = msgLen + 4;
+    uint32_t packageLen = msgLen + 4;
     if(msgLen>ConnConfig::GetInstance().MAX_PACKAGE_SIZE)
     {
         //因为数据包有一个大概的范围，更多的是对数据流是否出错进行检测
@@ -122,7 +123,7 @@ int Connectd::packetize(ConnectionNode* node,char* startPos,int dataLen)
         return 0;
     }
     node->m_msgLen = msgLen;
-    if(packetLen>dataLen)
+    if(packageLen>dataLen)
     {
         //未收到完整的包，缓存并等待下次数据
         memcpy(node->m_recvBuf,startPos,dataLen);
@@ -134,28 +135,30 @@ int Connectd::packetize(ConnectionNode* node,char* startPos,int dataLen)
 
     //组装BusHead、发送至DisPatch服务器
 
-    BusPacket *packet = (BusPacket*)busSendBuf;
-    BusHead *head = (BusHead*)packet;
+    BusPackage *package = (BusPackage*)busSendBuf;
+    BusHead *head = (BusHead*)package;
     head->node = node;
     head->tempID = node->m_tempID;
-    head->dst = ConnConfig::GetInstance().DISPATCH_ID;
-    head->src = ConnConfig::GetInstance().CONNECT_ID;
-    memcpy(packet->data,startPos+4,msgLen);
-    m_shmBus.send(ConnConfig::GetInstance().DISPATCH_ID,packet,sizeof(BusHead)+msgLen);
+    head->dst = ConnConfig::GetInstance().DISPATCHD_ID;
+    head->src = ConnConfig::GetInstance().CONNECTD_ID;
+    package->dataLen = msgLen;
+    memcpy(package->data,startPos+4,msgLen);
+    m_shmBus.send(ConnConfig::GetInstance().DISPATCHD_ID,package,sizeof(BusPackage)+msgLen);
+    printf("random ID:%d\n",node->m_tempID);
 
     //
-    int totalLen = packetLen; //处理的总长度
-    int leftLen = dataLen - packetLen;
+    int totalLen = packageLen; //处理的总长度
+    int leftLen = dataLen - packageLen;
     if(leftLen>0)
     {
-        totalLen += packetize(node,startPos+packetLen,leftLen); //递归处理
+        totalLen += packetize(node,startPos+packageLen,leftLen); //递归处理
     }
 
-    return packetLen;
+    return packageLen;
 
 }
 
-void Connectd::ResolvePacket(ConnectionNode* node)
+void Connectd::ResolvePackage(ConnectionNode* node)
 {
     int recvedLen = node->m_recvedLen;
     char* nodeBuf = node->m_recvBuf;
@@ -195,6 +198,7 @@ again:
     {
         //用户断开
        Connectd::GetInstance().CloseConnection(fd);
+       return;
     }
     int& recvedLen = connection_pool[fd].m_recvedLen;
 
@@ -214,7 +218,7 @@ again:
                 socketRecvBuf,
                 diff);
         recvedLen += diff;
-        Connectd::GetInstance().ResolvePacket(connection_pool+fd);
+        Connectd::GetInstance().ResolvePackage(connection_pool+fd);
         if(recvedLen+ret-diff > RECVBUF_LEN)
         {
             //先处理后仍大于最大缓存，即一个包都大于缓存，视为出错
@@ -225,11 +229,9 @@ again:
                 ret - diff);
         recvedLen += (ret-diff);
     }
-    Connectd::GetInstance().ResolvePacket(connection_pool+fd);
+    Connectd::GetInstance().ResolvePackage(connection_pool+fd);
 
     ev_timer *timer_watcher =  Connectd::GetInstance().m_timerWatchers + fd;
-    ev_init(timer_watcher,timeout_cb);
-    timer_watcher->repeat = TIMEOUT_SEC;
     ev_timer_again(loop,timer_watcher);
 }
 
@@ -248,20 +250,26 @@ void accept_cb(struct ev_loop *loop, ev_io *watcher,int revent)
         return;
     }
     set_nonblocking(connfd);
+    ConnectionNode* node = Connectd::GetInstance().m_connectionPool + connfd;
+    node->m_tempID = random();
+    node->m_connfd = connfd;
+
     ev_io *recv_watcher = Connectd::GetInstance().m_recvWatchers;
     ev_io_init(&recv_watcher[connfd],recv_cb,connfd,EV_READ);
     ev_io_start(loop, &recv_watcher[connfd]);
 
-    ev_timer *timer_watcher = Connectd::GetInstance().m_timerWatchers;
-    timer_watcher->data = Connectd::GetInstance().m_connectionPool + connfd;
-    ev_timer_init(&timer_watcher[connfd],timeout_cb,300,0);
-    ev_timer_start(loop,&timer_watcher[connfd]);
+    ev_timer *timer_watcher = Connectd::GetInstance().m_timerWatchers + connfd;
 
-    Connectd::GetInstance().m_connectionPool[connfd].m_tempID = random();
+    ev_init(timer_watcher,timeout_cb);
+    timer_watcher->repeat = TIMEOUT_SEC;
+    timer_watcher->data = node;
+    ev_timer_again(loop,timer_watcher);
+
 }
 
 void timeout_cb(struct ev_loop *loop,ev_timer *watcher,int revent)
 {
+    printf("Time out\n");
     Connectd::GetInstance().CloseConnection((ConnectionNode*)watcher->data);
 }
 
@@ -274,20 +282,20 @@ void sig_cb_stop(struct ev_loop *loop,ev_signal *watcher,int revent)
 void bus_handle_cb(struct ev_loop *loop,ev_io *watcher,int revent)
 {
     char *busRecvBuf = Connectd::GetInstance().busRecvBuf;
-    size_t ret = Connectd::GetInstance().m_shmBus.recv(busRecvBuf,MAX_BUS_PACKET);
+    size_t ret = Connectd::GetInstance().m_shmBus.recv(busRecvBuf,MAX_BUS_PACKAGE);
     if(ret==0)
     {
         printf("shmbus recv error");
         return;
     }
-    BusPacket *packet = (BusPacket*)busRecvBuf;
-    BusHead *head = (BusHead*)packet;
+    BusPackage *package = (BusPackage*)busRecvBuf;
+    BusHead *head = (BusHead*)package;
     if(head->node->m_tempID != head->tempID)
     {
         printf("origin client is log out");
         return;
     }
-    write(head->node->m_connfd,&packet->dataLen,packet->dataLen+4);
+    write(head->node->m_connfd,&package->dataLen,package->dataLen+4);
 }
 
 void set_nonblocking(int fd)

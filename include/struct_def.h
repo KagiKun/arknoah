@@ -13,9 +13,9 @@ struct BusHead
     size_t tempID;
 };
 
-struct BusPacket
+struct BusPackage
 {
-    BusHead busHead;
+    BusHead head;
     uint32_t dataLen;
     char data[];  //柔性数组，用于存储序列化后的数据
 };
